@@ -22,31 +22,32 @@ table.inner_column_border = table.inner_row_border\
 loop = asyncio.get_event_loop()
 
 async def is_image_updated(repo, ref, sha):
-    tag_url = {
-        'reg_url': REG_URL,
-        'repo': repo,
-        'ref': ref,
-    }
     querystring = {
         'service': AUTH_SERVICE,
         'scope': 'repository:%s:pull' % repo,
     }
 
-    auth_response = await\
-        loop.run_in_executor(None, functools.partial(requests.get, params=querystring), AUTH_URL)
+    future_auth_res = loop.run_in_executor(None, functools.partial(requests.get, params=querystring), AUTH_URL)
 
-    reg_headers = {
-        'accept': REG_HEADER_ACCEPT,
-        'Authorization': 'Bearer %s' % auth_response.json()['access_token']
+    tag_url = {
+        'reg_url': REG_URL,
+        'repo': repo,
+        'ref': ref,
     }
 
     get_manifests_v2_url = GET_MANIFESTS_V2_TEMPLATE.format(**tag_url)
-    reg_response = await\
+
+    reg_headers = {
+        'accept': REG_HEADER_ACCEPT,
+        'Authorization': 'Bearer %s' % (await future_auth_res).json()['access_token']
+    }
+
+    reg_res = await\
         loop.run_in_executor(None, functools.partial(requests.get, headers=reg_headers), get_manifests_v2_url)
 
-    # print(reg_response.json()['config']['digest'])
-    # print(reg_response.headers['docker-content-digest']) # this is the digest of the manifest
-    return reg_response.json()['config']['digest'] == sha
+    # print(reg_res.json()['config']['digest'])
+    # print(reg_res.headers['docker-content-digest']) # this is the digest of the manifest
+    return reg_res.json()['config']['digest'] == sha
 
 async def append_and_refresh_output(repo, ref, awaitable_is_image_updated):
     table.table_data.append([repo, ref, str(await awaitable_is_image_updated).upper()])
