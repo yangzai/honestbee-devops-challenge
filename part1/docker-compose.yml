@@ -1,0 +1,19 @@
+version: '3'
+services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./certs:/etc/nginx/certs
+  web:
+    image: node:8.2-alpine
+    environment:
+      - VIRTUAL_HOST=localhost
+    volumes:
+      - ./app:/usr/src/app
+    expose:
+      - ${WEB_PORT}
+    command: node /usr/src/app/index.js ${WEB_PORT}
