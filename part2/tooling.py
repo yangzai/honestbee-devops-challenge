@@ -58,7 +58,7 @@ async def append_and_refresh_output(repo, ref, awaitable_is_image_updated):
 async def main():
     barrier = []
 
-    # ignore container container running this script
+    # ignore container running this script
     env_hostname = os.environ.get('HOSTNAME')
     containers = [c for c in client.containers.list() if not c.id.startswith(env_hostname)] if env_hostname \
         else client.containers.list()
