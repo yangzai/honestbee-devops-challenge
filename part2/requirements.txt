@@ -1,4 +1,4 @@
-docker
-requests
-asyncio
-terminaltables
+docker==2.4.2
+requests==2.18.2
+asyncio==3.4.3
+terminaltables==3.1.0
