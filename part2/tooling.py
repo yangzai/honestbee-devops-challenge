@@ -16,7 +16,7 @@ GET_MANIFESTS_V2_TEMPLATE = '{reg_url}/v2/{repo}/manifests/{ref}'
 client = docker.from_env()
 
 table = AsciiTable([['CONTAINER ID', 'TAG', 'UP TO DATE?']])
-table.inner_column_border = table.inner_row_border\
+table.inner_column_border = table.inner_row_border \
     = table.inner_heading_row_border = table.outer_border = False
 
 loop = asyncio.get_event_loop()
@@ -42,7 +42,7 @@ async def is_image_updated(repo, ref, sha):
         'Authorization': 'Bearer %s' % (await future_auth_res).json()['access_token']
     }
 
-    reg_res = await\
+    reg_res = await \
         loop.run_in_executor(None, functools.partial(requests.get, headers=reg_headers), get_manifests_v2_url)
 
     try:
@@ -58,7 +58,12 @@ async def append_and_refresh_output(repo, ref, awaitable_is_image_updated):
 async def main():
     barrier = []
 
-    for container in client.containers.list():
+    # ignore container container running this script
+    env_hostname = os.environ.get('HOSTNAME')
+    containers = [c for c in client.containers.list() if not c.id.startswith(env_hostname)] if env_hostname \
+        else client.containers.list()
+
+    for container in containers:
         image_ref = container.attrs['Config']['Image'].split(':')
 
         repo = image_ref[0]
