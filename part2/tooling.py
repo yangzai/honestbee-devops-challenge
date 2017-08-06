@@ -45,9 +45,10 @@ async def is_image_updated(repo, ref, sha):
     reg_res = await\
         loop.run_in_executor(None, functools.partial(requests.get, headers=reg_headers), get_manifests_v2_url)
 
-    # print(reg_res.json()['config']['digest'])
-    # print(reg_res.headers['docker-content-digest']) # this is the digest of the manifest
-    return reg_res.json()['config']['digest'] == sha
+    try:
+        return reg_res.json()['config']['digest'] == sha
+    except KeyError:    # e.g. when image doesn't exist in registry
+        return False
 
 async def append_and_refresh_output(repo, ref, awaitable_is_image_updated):
     table.table_data.append([repo, ref, str(await awaitable_is_image_updated).upper()])
